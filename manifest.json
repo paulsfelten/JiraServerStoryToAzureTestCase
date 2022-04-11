@@ -1,0 +1,19 @@
+{
+  "name": "JiraOps",
+  "description": "Creates an Azure Test Case based on an open Jira Story.",
+  "version": "1.0",
+  "manifest_version": 3,
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "/images/active16.png",
+		"32": "/images/active32.png",
+		"48": "/images/active48.png",
+		"128": "/images/active128.png"
+    }
+  },
+  "host_permissions": [
+    "https://jira.<domain>.com/browse/*"
+  ]
+}
