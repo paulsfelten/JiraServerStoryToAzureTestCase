@@ -26,7 +26,47 @@ hideButton();
 
 getToken();
 
-doesUrlMatch();
+let jiraTab = false;
+
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+    if (changeInfo.status == 'complete' && tab.active) {
+		console.log('updated from contentscript');
+		
+		let url = tab.url;
+		console.log("url: " + url);
+		
+		if(url.includes("jira.<org>.com/browse/")){
+			sleep(2000);
+				
+			chrome.scripting.executeScript(
+			{
+				target: {tabId: tabId, allFrames: true},
+				func: getTitle,
+			},
+			(results) => { 
+				let title = results[0].result;
+				console.log("title: " + title);
+				
+				chrome.scripting.executeScript(
+				{
+					target: {tabId: tabId, allFrames: true},
+					func: getDescription,
+				},
+				(results) => { 
+					let desc = results[0].result;
+					console.log("desc: " + desc);
+					
+					chrome.storage.sync.get(['token'], function(result) {
+						console.log('Token retrieved: ' + result.token);
+						document.getElementById("ado_token").value = result.token;
+						
+						enableButton(url, title, desc, result.token);
+					});
+				});
+			});
+		}
+	};	
+});
  
 function getTitle() {
 	return document.getElementById("summary-val").innerText;
@@ -85,51 +125,6 @@ function getToken() {
 		return "";
 	}
 };
-
-function doesUrlMatch() {
-	chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-
-		// since only one tab should be active and in the current window at once
-		// the return variable should only have one entry
-		var activeTab = tabs[0];
-		var tabId = activeTab.id; // or do whatever you need
-	
-		let url = activeTab.url;
-		console.log("url: " + url);
-	
-		if(url.includes("jira.vitalware.com/browse/")){
-			sleep(2000);
-				
-			chrome.scripting.executeScript(
-			{
-				target: {tabId: tabId, allFrames: true},
-				func: getTitle,
-			},
-			(results) => { 
-				let title = results[0].result;
-				console.log("title: " + title);
-				
-				chrome.scripting.executeScript(
-				{
-					target: {tabId: tabId, allFrames: true},
-					func: getDescription,
-				},
-				(results) => { 
-					let desc = results[0].result;
-					console.log("desc: " + desc);
-					
-					chrome.storage.sync.get(['token'], function(result) {
-						console.log('Token retrieved: ' + result.token);
-						document.getElementById("ado_token").value = result.token;
-						
-						enableButton(url, title, desc, result.token);
-					});
-				});
-			});
-		}
-	
-	 });
-}
 
 function convertNewLines(str)  {
     return str.replace(/\r\n/g, "<BR/>");
